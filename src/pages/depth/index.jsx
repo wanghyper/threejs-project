@@ -5,9 +5,9 @@ import * as THREE from 'three';
 import Stats from 'three/addons/libs/stats.module.js';
 import {GUI} from 'three/addons/libs/lil-gui.module.min.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-export default function SpotLightShadow() {
+export default function Depth() {
     useEffect(() => {
-        let camera, scene, renderer, controls, stats;
+        let camera, camera1, scene, renderer, controls, stats;
         let target;
         let postScene, postCamera, postMaterial;
         let supportsExtension = true;
@@ -35,18 +35,21 @@ export default function SpotLightShadow() {
                 document.querySelector('#error').style.display = 'block';
                 return;
             }
-
+            const contaner = document.getElementById('container');
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
+            contaner.appendChild(renderer.domElement);
 
             //
 
             stats = new Stats();
-            document.body.appendChild(stats.dom);
+            contaner.appendChild(stats.dom);
 
             camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 50);
             camera.position.z = 4;
+
+            camera1 = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 10);
+            camera.position.z = 1;
 
             controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
@@ -56,7 +59,8 @@ export default function SpotLightShadow() {
 
             // Our scene
             setupScene();
-
+            const helper = new THREE.CameraHelper(camera1);
+            scene.add(helper);
             // Setup post-processing step
             setupPost();
 
@@ -76,7 +80,7 @@ export default function SpotLightShadow() {
 
             const format = parseFloat(params.format);
             const type = parseFloat(params.type);
-
+            // framebuffer object（FBO）
             target = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
             target.texture.minFilter = THREE.NearestFilter;
             target.texture.magFilter = THREE.NearestFilter;
@@ -89,6 +93,10 @@ export default function SpotLightShadow() {
         function setupPost() {
             // Setup post processing stage
             postCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+            const helper = new THREE.CameraHelper(postCamera);
+            scene.add(helper);
+
             postMaterial = new THREE.ShaderMaterial({
                 vertexShader: vert,
                 fragmentShader: frag,

@@ -1,11 +1,10 @@
 import {useEffect, useState} from 'react';
-import './App.css';
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import {GUI} from 'three/addons/libs/lil-gui.module.min.js';
 import {PLYLoader} from 'three/addons/loaders/PLYLoader.js';
-export default function SpotLightShadow() {
+export default function SpotLight() {
     useEffect(() => {
         let renderer, scene, camera;
 

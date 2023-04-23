@@ -5,6 +5,7 @@ export default Object.keys(modules).map(key => {
     const name = /\.\/(.*)\.jsx/.exec(key);
     return {
         path:  name?.[1],
+        name: Components.name,
         element: Components
     }
 });

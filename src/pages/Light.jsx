@@ -1,5 +1,4 @@
 import {useEffect, useState} from 'react';
-import './App.css';
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
