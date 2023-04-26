@@ -7,6 +7,8 @@ uniform vec3 uKs;
 uniform vec3 lightPosition;
 uniform float uLightIntensity;
 uniform int uTextureSample;
+uniform float cameraNear;
+uniform float cameraFar;
 
 varying highp vec2 vTextureCoord;
 varying highp vec3 vFragPos;
@@ -37,7 +39,7 @@ void main(void) {
     gl_FragColor = vec4(pow((ambient + diffuse + specular), vec3(1.0 / 2.2)), 1.0);     
       //gl_FragColor = vec4(pow((diffuse), vec3(1.0/2.2)), 1.0);    
 
-      //gl_FragColor = vec4( color, 1.0 );
-      //gl_FragColor = vec4(0.1);
+    //   gl_FragColor = vec4( color, 1.0 );
+    //   gl_FragColor = vec4(lightDir, 0.0, 0.0, 1.0);
 
 }

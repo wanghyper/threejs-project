@@ -1,9 +1,9 @@
 import {useEffect} from 'react';
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import vert from './light1_vert.glsl'
-import frag from './light1_frag.glsl'
-import earthPng from './Earth.png'
+import vert from './light1_vert.glsl';
+import frag from './light1_frag.glsl';
+import earthPng from './Earth.png';
 export default function Light() {
     useEffect(() => {
         /**
@@ -31,7 +31,12 @@ export default function Light() {
         //创建相机对象
         var camera = new THREE.OrthographicCamera(-s * k, s * k, s, -s, 1, 1000);
         camera.position.set(200, 300, 200); //设置相机位置
-        // camera.position.set(0, 0, 200); //设置相机位置
+        var camera1 = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 200);
+        camera1.position.set(200, 300, 200); //设置相机位置
+        scene.add(camera1);
+        camera1.lookAt(new THREE.Vector3(300, 25, 225));
+        var helper = new THREE.CameraHelper(camera1);
+        scene.add(helper);
         camera.lookAt(scene.position); //设置相机方向(指向的场景对象)
 
         /**
@@ -51,13 +56,15 @@ export default function Light() {
         scene.add(mesh); //网格模型添加到场景中
         var uniforms;
         uniforms = {
+            cameraNear: {value: camera1.near},
+            cameraFar: {value: camera1.far},
             uSampler: {
                 //采样的图片
                 value: texture,
             },
             uTextureSample: {
                 //采样选择 1为贴图 2为不带贴图
-                value: 1,
+                value: 2,
             },
             uKd: {
                 value: new THREE.Vector3(0.05, 0.05, 0.05), //控制满反射系数
@@ -67,7 +74,7 @@ export default function Light() {
             },
             lightPosition: {
                 //光源位置
-                value: point.position,
+                value: camera1.position,
             },
             uLightIntensity: {
                 value: 1155.0, //光照强度
