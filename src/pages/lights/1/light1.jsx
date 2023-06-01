@@ -4,7 +4,7 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import vert from './light1_vert.glsl';
 import frag from './light1_frag.glsl';
 import earthPng from './Earth.png';
-export default function Light() {
+export default function Light1() {
     useEffect(() => {
         /**
          * 创建场景对象Scene
@@ -31,13 +31,25 @@ export default function Light() {
         //创建相机对象
         var camera = new THREE.OrthographicCamera(-s * k, s * k, s, -s, 1, 1000);
         camera.position.set(200, 300, 200); //设置相机位置
+
         var camera1 = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 200);
         camera1.position.set(200, 300, 200); //设置相机位置
         scene.add(camera1);
         camera1.lookAt(new THREE.Vector3(300, 25, 225));
+
         var helper = new THREE.CameraHelper(camera1);
         scene.add(helper);
         camera.lookAt(scene.position); //设置相机方向(指向的场景对象)
+        const cameraHelper = new THREE.CameraHelper(camera1);
+        scene.add(cameraHelper);
+       
+        camera1.updateMatrix();
+        camera1.updateMatrixWorld();
+        var frustum = new THREE.Frustum();
+        const camera_projection_matrix = new THREE.Matrix4().multiplyMatrices(camera1.projectionMatrix, camera1.matrixWorldInverse);
+        frustum.setFromProjectionMatrix(
+            new THREE.Matrix4().multiplyMatrices(camera1.projectionMatrix, camera1.matrixWorldInverse)
+        );
 
         /**
          * 创建网格模型
@@ -45,6 +57,10 @@ export default function Light() {
         // var geometry = new THREE.BoxGeometry(100, 100, 100); //立方体
         // var geometry = new THREE.PlaneGeometry(400, 400); //矩形平面
         var geometry = new THREE.SphereGeometry(100, 25, 25); //球体
+        console.log(frustum);
+        if (frustum.containsPoint(new THREE.Vector3(100, 25, 25))) {
+            console.log(123);
+        }
         // TextureLoader创建一个纹理加载器对象，可以加载图片作为几何体纹理
         var textureLoader = new THREE.TextureLoader();
         // 加载纹理贴图
@@ -56,15 +72,16 @@ export default function Light() {
         scene.add(mesh); //网格模型添加到场景中
         var uniforms;
         uniforms = {
-            cameraNear: {value: camera1.near},
-            cameraFar: {value: camera1.far},
+            camera_projection_matrix: {
+                value: camera1.projectionMatrix,
+            },
             uSampler: {
                 //采样的图片
                 value: texture,
             },
             uTextureSample: {
                 //采样选择 1为贴图 2为不带贴图
-                value: 2,
+                value: 1,
             },
             uKd: {
                 value: new THREE.Vector3(0.05, 0.05, 0.05), //控制满反射系数
@@ -97,7 +114,7 @@ export default function Light() {
         var renderer = new THREE.WebGLRenderer();
         renderer.setSize(width, height); //设置渲染区域尺寸
         renderer.setClearColor(0xb9d3ff, 1); //设置背景颜色
-        document.body.appendChild(renderer.domElement); //body元素中插入canvas对象
+        document.getElementById('container').appendChild(renderer.domElement); //body元素中插入canvas对象
 
         // 渲染函数
         function render() {
