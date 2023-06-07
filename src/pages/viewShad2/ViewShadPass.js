@@ -13,9 +13,7 @@ import {
 import {Pass, FullScreenQuad} from 'three/addons/postprocessing/Pass.js';
 import vert from './vert.glsl';
 import frag from './frag.glsl';
-import viewVert from './viewVert.glsl';
-import viewFrag from './viewFrag.glsl';
-
+import {GUI} from 'three/addons/libs/lil-gui.module.min.js';
 export default class ViewShadPass extends Pass {
     constructor(scene, camera, viewCamera, resolution = new Vector2(256, 256)) {
         super();
@@ -25,32 +23,6 @@ export default class ViewShadPass extends Pass {
         this.depthTarget = new WebGLRenderTarget(resolution.x, resolution.y, {
             minFilter: NearestFilter,
             magFilter: NearestFilter,
-        });
-
-        this.viewMaterial = new ShaderMaterial({
-            uniforms: {
-                lightPosition: {
-                    //光源位置
-                    value: viewCamera.position,
-                },
-                viewCameraProjectionMatrix: {
-                    value: viewCamera.projectionMatrix,
-                },
-                viewCameraMatrixWorldInverse: {
-                    value: viewCamera.matrixWorldInverse,
-                },
-                viewCameraNear: {
-                    value: viewCamera.near,
-                },
-                viewCameraFar: {
-                    value: viewCamera.far,
-                },
-                u_distance: {
-                    value: 100,
-                },
-            },
-            vertexShader: viewVert,
-            fragmentShader: viewFrag,
         });
 
         this.depthMaterial = new MeshDepthMaterial();
@@ -72,6 +44,9 @@ export default class ViewShadPass extends Pass {
             viewCameraModelViewMatrix: {
                 value: viewCamera.modelViewMatrix,
             },
+            u_distance: {
+                value: 100,
+            },
             lightPosition: {
                 //光源位置
                 value: viewCamera.position,
@@ -88,12 +63,11 @@ export default class ViewShadPass extends Pass {
                 value: null,
             },
             tDepth: {value: this.depthTarget.depthTexture},
-            tView: {value: this.depthTarget.texture},
         };
 
         this.material = new ShaderMaterial({
             defines: {
-                'DEPTH_PACKING': 0,
+                'DEPTH_PACKING': 1,
             },
             uniforms: this.uniforms,
             vertexShader: vert,
@@ -101,20 +75,39 @@ export default class ViewShadPass extends Pass {
         });
 
         this.fsQuad = new FullScreenQuad(this.material);
+        console.log(this.material);
+        // UI控件
+        const parameters = {
+            u_distance: 100,
+        };
+
+        const update = () => {
+            this.material.uniforms.u_distance.value = parameters.u_distance;
+        };
+
+        const gui = new GUI();
+        gui.add(parameters, 'u_distance', 0, 5000, 1).onChange(update);
     }
 
     render(renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */) {
+        this.material.uniforms.tDiffuse.value = readBuffer.texture;
+
         // 渲染深度图
         renderer.setRenderTarget(this.depthTarget);
-        this.scene.overrideMaterial = this.viewMaterial;
+        this.scene.overrideMaterial = this.depthMaterial;
         renderer.render(this.scene, this.camera);
         this.scene.overrideMaterial = null;
-        this.material.uniforms.tView.value = this.depthTarget.texture;
-        this.material.uniforms.tDepth.value = this.depthTarget.depthTexture;
+        this.material.uniforms.tDepth.value = this.depthTarget.texture;
 
-        // 渲染后续流程
-        this.material.uniforms.tDiffuse.value = readBuffer.texture;
+        // renderer.setRenderTarget(this.depthTarget);
+        // renderer.clear();
+        // renderer.render(this.scene, this.camera);
+
+        // this.material.uniforms.lightPosition.value = this.viewCamera.position;
+        // this.material.uniforms.tDepth.value = this.depthTarget.depthTexture;
+
         this.fsQuad.material = this.material;
+
         if (this.renderToScreen) {
             renderer.setRenderTarget(null);
             this.fsQuad.render(renderer);

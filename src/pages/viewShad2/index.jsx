@@ -4,8 +4,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 import {EffectComposer} from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import {RenderPass} from 'three/examples/jsm/postprocessing/RenderPass.js';
 import ViewShadPass from './ViewShadPass';
-import {GUI} from 'three/addons/libs/lil-gui.module.min.js';
-export default function ViewShad() {
+export default function ViewShad2() {
     useEffect(() => {
         /**
          * 创建场景对象Scene
@@ -17,7 +16,7 @@ export default function ViewShad() {
          * 光源设置
          */
         //点光源
-        var point = new THREE.PointLight(0xffffff);
+        var point = new THREE.PointLight(0xff00ff);
         point.position.set(400, -100, 300); //点光源位置
         scene.add(point); //点光源添加到场景中
         var pointLightHelper = new THREE.PointLightHelper(point);
@@ -30,7 +29,10 @@ export default function ViewShad() {
          */
         var width = windowWidth; //窗口宽度
         var height = windowHeight; //窗口高度
+        var k = width / height; //窗口宽高比
+        var s = 150; //三维场景显示范围控制系数，系数越大，显示的范围越大
         //创建相机对象
+        // var camera = new THREE.PerspectiveCamera(-s * k, s * k, s, -s, 1, 2000);
         var camera = new THREE.PerspectiveCamera();
         camera.position.set(500, 500, 900); //设置相机位置
         var fov = 50;
@@ -50,21 +52,46 @@ export default function ViewShad() {
         pointmesh.position.set(...camera1.position); //网格模型对象的位置
         scene.add(pointmesh); //网格模型添加到场景中
 
+        // scene.add(new THREE.CameraHelper(camera));
+        var helper = new THREE.CameraHelper(camera1);
+        scene.add(helper);
         camera.lookAt(scene.position); //设置相机方向(指向的场景对象)
         const cameraHelper = new THREE.CameraHelper(camera1);
         scene.add(cameraHelper);
 
         camera1.updateMatrix();
         camera1.updateMatrixWorld();
+        // var frustum = new THREE.Frustum();
+        // frustum.setFromProjectionMatrix(
+        //     new THREE.Matrix4().multiplyMatrices(camera1.projectionMatrix, camera1.matrixWorldInverse)
+        // );
+        var top = near * Math.tan(((Math.PI / 180.0) * fov) / 2);
+        var bottom = -top;
+        var right = aspectRatio * top;
+        var left = -right;
+        // const line = createFrustum(right, left, top, bottom, near, far);
+
+        // scene.add(line);
 
         /**
          * 创建网格模型
          */
-        var geometry = new THREE.BoxGeometry(10, 10, 10); //立方体
+        var geometry = new THREE.BoxGeometry(20, 20, 20); //立方体
         // var geometry = new THREE.PlaneGeometry(400, 400); //矩形平面
         // var geometry = new THREE.SphereGeometry(100, 25, 25); //球体
+        // // TextureLoader创建一个纹理加载器对象，可以加载图片作为几何体纹理
+        // var textureLoader = new THREE.TextureLoader();
+        // // 加载纹理贴图
+        // var texture = textureLoader.load(earthPng);
+        // var material = new THREE.MeshPhongMaterial({
+        //     map: texture, // 普通颜色纹理贴图
+        // });
+        // //材质对象Material
+        // var mesh = new THREE.Mesh(geometry, material); //网格模型对象Mesh
+        // mesh.position.set(0, -100, 0);
+        // scene.add(mesh); //网格模型添加到场景中
         const colors = [0xff0000, 0x00ff00, 0x0000ff];
-        for (let i = 0; i < 3000; i++) {
+        for (let i = 0; i < 300; i++) {
             const layer = i % 3;
             const object = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({color: colors[layer]}));
 
@@ -75,6 +102,11 @@ export default function ViewShad() {
             object.rotation.x = Math.random() * 2 * Math.PI;
             object.rotation.y = Math.random() * 2 * Math.PI;
             object.rotation.z = Math.random() * 2 * Math.PI;
+
+            // object.scale.x = Math.random() + 0.5;
+            // object.scale.y = Math.random() + 0.5;
+            // object.scale.z = Math.random() + 0.5;
+
             scene.add(object);
         }
 
@@ -118,46 +150,6 @@ export default function ViewShad() {
         controls2.addEventListener('change', e => {
             pointmesh.position.set(...camera1.position);
         });
-
-        // UI控件
-        const parameters = {
-            set camera_near(value) {
-                camera1.near = value;
-                camera1.updateProjectionMatrix();
-                cameraHelper.update();
-            },
-            get camera_near() {
-                return camera1.near;
-            },
-            set camera_far(value) {
-                camera1.far = value;
-                camera1.updateProjectionMatrix();
-                cameraHelper.update();
-            },
-            get camera_far() {
-                return camera1.far;
-            },
-            set camera_fov(value) {
-                camera1.fov = value;
-                camera1.updateProjectionMatrix();
-                cameraHelper.update();
-            },
-            get camera_fov() {
-                return camera1.fov;
-            },
-            set u_distance(value) {
-                viewShadPass.viewMaterial.uniforms.u_distance.value = value;
-            },
-            get u_distance() {
-                return viewShadPass.viewMaterial.uniforms.u_distance.value;
-            }, 
-        };
-
-        const gui = new GUI();
-        gui.add(parameters, 'camera_near', 1, 100, 1);
-        gui.add(parameters, 'camera_far', 100, 5000, 1);
-        gui.add(parameters, 'camera_fov', 1, 100, 1);
-        gui.add(parameters, 'u_distance', 1, 1000, 1);
     }, []);
 
     return (
