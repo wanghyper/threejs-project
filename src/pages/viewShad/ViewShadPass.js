@@ -1,32 +1,26 @@
 import {
     ShaderMaterial,
     WebGLRenderTarget,
-    DepthTexture,
-    NearestFilter,
     Vector2,
-    DepthFormat,
-    UnsignedShortType,
-    MeshDepthMaterial,
-    RGBADepthPacking,
-    NoBlending,
 } from 'three';
 import {Pass, FullScreenQuad} from 'three/addons/postprocessing/Pass.js';
 import vert from './vert.glsl';
 import frag from './frag.glsl';
 import viewVert from './viewVert.glsl';
 import viewFrag from './viewFrag.glsl';
+import depthVert from './depthVert.glsl';
+import depthFrag from './depthFrag.glsl';
 
 export default class ViewShadPass extends Pass {
-    constructor(scene, camera, viewCamera, resolution = new Vector2(256, 256)) {
+    constructor(scene, camera, viewCamera, resolution = new Vector2(256, 256), mapSize = 4096) {
         super();
         this.scene = scene;
         this.camera = camera;
         this.viewCamera = viewCamera;
-        this.depthTarget = new WebGLRenderTarget(resolution.x, resolution.y, {
-            minFilter: NearestFilter,
-            magFilter: NearestFilter,
-        });
+        this.mapSize = mapSize;
+        this.depthTarget = new WebGLRenderTarget(mapSize, mapSize);
 
+        this.viewTarget = new WebGLRenderTarget(resolution.x, resolution.y);
         this.viewMaterial = new ShaderMaterial({
             uniforms: {
                 lightPosition: {
@@ -45,6 +39,9 @@ export default class ViewShadPass extends Pass {
                 viewCameraFar: {
                     value: viewCamera.far,
                 },
+                tDepth: {
+                    value: null,
+                },
                 u_distance: {
                     value: 100,
                 },
@@ -53,15 +50,13 @@ export default class ViewShadPass extends Pass {
             fragmentShader: viewFrag,
         });
 
-        this.depthMaterial = new MeshDepthMaterial();
-        this.depthMaterial.depthPacking = RGBADepthPacking;
-        this.depthMaterial.blending = NoBlending;
-
-        this.depthTarget.depthTexture = new DepthTexture();
-        this.depthTarget.depthBuffer = true;
-        this.depthTarget.stencilBuffer = false;
-        this.depthTarget.depthTexture.format = DepthFormat;
-        this.depthTarget.depthTexture.type = UnsignedShortType;
+        // this.testMaterial = new MeshNormalMaterial();
+        // this.testMaterial.depthPacking = RGBADepthPacking;
+        // this.testMaterial.blending = NoBlending;
+        this.depthMaterial = new ShaderMaterial({
+            vertexShader: depthVert,
+            fragmentShader: depthFrag,
+        });
         this.uniforms = {
             viewCameraProjectionMatrix: {
                 value: viewCamera.projectionMatrix,
@@ -87,7 +82,6 @@ export default class ViewShadPass extends Pass {
             tDiffuse: {
                 value: null,
             },
-            tDepth: {value: this.depthTarget.depthTexture},
             tView: {value: this.depthTarget.texture},
         };
 
@@ -104,13 +98,18 @@ export default class ViewShadPass extends Pass {
     }
 
     render(renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */) {
-        // 渲染深度图
+        // 渲染目标相机下的深度图
         renderer.setRenderTarget(this.depthTarget);
+        this.scene.overrideMaterial = this.depthMaterial;
+        renderer.render(this.scene, this.viewCamera);
+        this.scene.overrideMaterial = null;
+        this.viewMaterial.uniforms.tDepth.value = this.depthTarget.texture;
+        // 计算可视域
+        renderer.setRenderTarget(this.viewTarget);
         this.scene.overrideMaterial = this.viewMaterial;
         renderer.render(this.scene, this.camera);
         this.scene.overrideMaterial = null;
-        this.material.uniforms.tView.value = this.depthTarget.texture;
-        this.material.uniforms.tDepth.value = this.depthTarget.depthTexture;
+        this.material.uniforms.tView.value = this.viewTarget.texture;
 
         // 渲染后续流程
         this.material.uniforms.tDiffuse.value = readBuffer.texture;

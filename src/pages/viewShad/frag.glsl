@@ -14,17 +14,10 @@ float getDepth(const in sampler2D depthTexture, const in vec2 screenPosition) {
     return texture2D(tDepth, screenPosition).x;
     #endif
 }
-float readDepth(sampler2D depthSampler, vec2 coord) {
-    float fragCoordZ = getDepth(depthSampler, coord);
-    // viewZ 即渲染片段和摄影机之间的z距离
-    float viewZ = perspectiveDepthToViewZ(fragCoordZ, cameraNear, cameraFar);
-    return viewZToOrthographicDepth(viewZ, cameraNear, cameraFar);
-}
 
 void main(void) {
     vec4 texel = texture2D(tDiffuse, vUv);
     vec4 depthTexel = texture2D(tDepth, vUv);
-    float viewDepth = readDepth(tDepth, vUv);
 
     vec4 viewTexel = texture2D(tView, vUv);
     // 在可视区域内 如果可以看到
@@ -37,8 +30,8 @@ void main(void) {
     } 
     // 不在可视区域内
     else {
-        gl_FragColor = vec4(texel);
-    }
+         gl_FragColor = vec4(texel);
+    } 
     // gl_FragColor = texel;
-    gl_FragColor = vec4(vec3(viewDepth), 1.0);
+    // gl_FragColor = viewTexel;
 }

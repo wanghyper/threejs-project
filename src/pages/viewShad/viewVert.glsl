@@ -1,4 +1,3 @@
-varying vec2 vTextureCoord;
 varying vec3 vFragPos;
 varying vec3 vNormal;
 varying vec4 vModelPos;
@@ -13,7 +12,6 @@ void main(void) {
     vFragPos = position;
     vNormal = normal;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    vTextureCoord = uv;
     vModelPos = modelMatrix * vec4(position, 1.0);
 
 }

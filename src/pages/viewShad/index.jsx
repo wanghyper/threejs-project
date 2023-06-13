@@ -45,26 +45,23 @@ export default function ViewShad() {
         /**
          * 创建一个球体，位置为相机顶点
          */
-        var point1 = new THREE.SphereGeometry(10, 25, 25); //球体
-        var pointmesh = new THREE.Mesh(point1, new THREE.MeshBasicMaterial({color: 0xffff00})); //网格模型对象Mesh
-        pointmesh.position.set(...camera1.position); //网格模型对象的位置
-        scene.add(pointmesh); //网格模型添加到场景中
+        // var point1 = new THREE.SphereGeometry(10, 25, 25); //球体
+        // var pointmesh = new THREE.Mesh(point1, new THREE.MeshBasicMaterial({color: 0xffff00})); //网格模型对象Mesh
+        // pointmesh.position.set(...camera1.position); //网格模型对象的位置
+        // scene.add(pointmesh); //网格模型添加到场景中
 
         camera.lookAt(scene.position); //设置相机方向(指向的场景对象)
         const cameraHelper = new THREE.CameraHelper(camera1);
         scene.add(cameraHelper);
 
-        camera1.updateMatrix();
-        camera1.updateMatrixWorld();
-
         /**
          * 创建网格模型
          */
-        var geometry = new THREE.BoxGeometry(10, 10, 10); //立方体
+        var geometry = new THREE.BoxGeometry(50, 50, 50); //立方体
         // var geometry = new THREE.PlaneGeometry(400, 400); //矩形平面
-        // var geometry = new THREE.SphereGeometry(100, 25, 25); //球体
+        // var geometry = new THREE.SphereGeometry(10, 25, 25); //球体
         const colors = [0xff0000, 0x00ff00, 0x0000ff];
-        for (let i = 0; i < 3000; i++) {
+        for (let i = 0; i < 300; i++) {
             const layer = i % 3;
             const object = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({color: colors[layer]}));
 
@@ -81,12 +78,14 @@ export default function ViewShad() {
         /**
          * 创建渲染器对象
          */
-        var renderer = new THREE.WebGLRenderer();
+        var renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            alpha: true,
+        });
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(width, height); //设置渲染区域尺寸
         renderer.setClearColor(0xb9d3ff, 1); //设置背景颜色
         document.getElementById('container1').appendChild(renderer.domElement); //body元素中插入canvas对象
-        console.log('renderer', renderer);
         var renderer2 = new THREE.WebGLRenderer();
         renderer2.setPixelRatio(window.devicePixelRatio);
         renderer2.setSize(width, height); //设置渲染区域尺寸
@@ -115,9 +114,6 @@ export default function ViewShad() {
         //创建控件对象  相机对象camera作为参数   控件可以监听鼠标的变化，改变相机对象的属性
         var controls = new OrbitControls(camera, renderer.domElement);
         var controls2 = new OrbitControls(camera1, renderer2.domElement);
-        controls2.addEventListener('change', e => {
-            pointmesh.position.set(...camera1.position);
-        });
 
         // UI控件
         const parameters = {
@@ -157,7 +153,7 @@ export default function ViewShad() {
         gui.add(parameters, 'camera_near', 1, 100, 1);
         gui.add(parameters, 'camera_far', 100, 5000, 1);
         gui.add(parameters, 'camera_fov', 1, 100, 1);
-        gui.add(parameters, 'u_distance', 1, 1000, 1);
+        gui.add(parameters, 'u_distance', 0.1, 10, 0.011);
     }, []);
 
     return (
