@@ -5,6 +5,7 @@ import {EffectComposer} from 'three/examples/jsm/postprocessing/EffectComposer.j
 import {RenderPass} from 'three/examples/jsm/postprocessing/RenderPass.js';
 import ViewShadPass from './ViewShadPass';
 import {GUI} from 'three/addons/libs/lil-gui.module.min.js';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 export default function ViewShad() {
     useEffect(() => {
         /**
@@ -17,13 +18,13 @@ export default function ViewShad() {
          * 光源设置
          */
         //点光源
-        var point = new THREE.PointLight(0xffffff);
-        point.position.set(400, -100, 300); //点光源位置
-        scene.add(point); //点光源添加到场景中
-        var pointLightHelper = new THREE.PointLightHelper(point);
-        scene.add(pointLightHelper);
+        // var point = new THREE.PointLight(0xffffff);
+        // point.position.set(400, -100, 300); //点光源位置
+        // scene.add(point); //点光源添加到场景中
+        // var pointLightHelper = new THREE.PointLightHelper(point);
+        // scene.add(pointLightHelper);
         //环境光
-        var ambient = new THREE.AmbientLight(0x888888);
+        var ambient = new THREE.AmbientLight(0xdddddd);
         scene.add(ambient);
         /**
          * 相机设置
@@ -32,13 +33,15 @@ export default function ViewShad() {
         var height = windowHeight; //窗口高度
         //创建相机对象
         var camera = new THREE.PerspectiveCamera();
-        camera.position.set(500, 500, 900); //设置相机位置
+        // camera.position.set(500, 500, 900); //设置相机位置
+        camera.position.set(-10, 10, 1.25);
         var fov = 50;
         var aspectRatio = windowWidth / windowHeight;
         var near = 0.01;
-        var far = 500;
+        var far = 30;
         var camera1 = new THREE.PerspectiveCamera(fov, aspectRatio, near, far);
-        camera1.position.set(240, 300, 200); //设置相机位置
+        // camera1.position.set(240, 300, 200); //设置相机位置
+        camera1.position.set(-10, 10, 1.25);
         scene.add(camera1);
         camera1.lookAt(new THREE.Vector3(200, 0, 200));
 
@@ -57,24 +60,27 @@ export default function ViewShad() {
         /**
          * 创建网格模型
          */
-        var geometry = new THREE.BoxGeometry(50, 50, 50); //立方体
-        // var geometry = new THREE.PlaneGeometry(400, 400); //矩形平面
-        // var geometry = new THREE.SphereGeometry(10, 25, 25); //球体
-        const colors = [0xff0000, 0x00ff00, 0x0000ff];
-        for (let i = 0; i < 300; i++) {
-            const layer = i % 3;
-            const object = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({color: colors[layer]}));
+        // var geometry = new THREE.BoxGeometry(30, 30, 30); //立方体
+        // // var geometry = new THREE.PlaneGeometry(400, 400); //矩形平面
+        // // var geometry = new THREE.SphereGeometry(10, 25, 25); //球体
+        // const colors = [0xff0000, 0x00ff00, 0x0000ff];
+        // for (let i = 0; i < 30; i++) {
+        //     const layer = i % 3;
+        //     const object = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({color: colors[layer]}));
 
-            object.position.x = Math.random() * 800 - 400;
-            object.position.y = Math.random() * 800 - 400;
-            object.position.z = Math.random() * 800 - 400;
+        //     object.position.x = layer * 50  - 400;
+        //     object.position.y = layer * 50  - 400;
+        //     object.position.z = layer * 50  - 400;
 
-            object.rotation.x = Math.random() * 2 * Math.PI;
-            object.rotation.y = Math.random() * 2 * Math.PI;
-            object.rotation.z = Math.random() * 2 * Math.PI;
-            scene.add(object);
-        }
-
+        //     // object.rotation.x = i * 10 + 2 * Math.PI;
+        //     // object.rotation.y = i * 10 + 2 * Math.PI;
+        //     // object.rotation.z = i * 10 + 2 * Math.PI;
+        //     scene.add(object);
+        // }
+        new GLTFLoader().load('https://threejs.org/examples/models/gltf/SheenChair.glb', function (gltf) {
+            scene.add(gltf.scene);
+            gltf.scene.scale.set(10, 10, 10);
+        });
         /**
          * 创建渲染器对象
          */
@@ -142,18 +148,18 @@ export default function ViewShad() {
                 return camera1.fov;
             },
             set u_distance(value) {
-                viewShadPass.viewMaterial.uniforms.u_distance.value = value;
+                viewShadPass.material.uniforms.u_distance.value = value;
             },
             get u_distance() {
-                return viewShadPass.viewMaterial.uniforms.u_distance.value;
-            }, 
+                return viewShadPass.material.uniforms.u_distance.value;
+            },
         };
 
         const gui = new GUI();
         gui.add(parameters, 'camera_near', 1, 100, 1);
         gui.add(parameters, 'camera_far', 100, 5000, 1);
         gui.add(parameters, 'camera_fov', 1, 100, 1);
-        gui.add(parameters, 'u_distance', 0.1, 10, 0.011);
+        gui.add(parameters, 'u_distance', 1, 1000, 1);
     }, []);
 
     return (
